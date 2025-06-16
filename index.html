@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Game-Theoretic Negotiation Framework for Cross-Cultural Consensus in LLMs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Inter & Lexend -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lexend:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="shortcut icon" href="images/favicon.svg" type="image/svg">
+    <script src="https://kit.fontawesome.com/a0c5198962.js" crossorigin="anonymous"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+    <style>
+        :root {
+            --primary-color: #4285F4;
+            --secondary-color: #34A853;
+            --accent-color: #FBBC05;
+            --background-light: #f8f9fa;
+            --text-color: #202124;
+            --light-blue: #dae8fc;
+            --light-green: #d5e8d4;
+            --light-purple: #e1d5e7;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --border-radius: 8px;
+            --spacing-xs: 0.25rem;
+            --spacing-sm: 0.5rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 2rem;
+            --spacing-xl: 4rem;
+            --transition: all 0.3s ease;
+            --sidebar-width: 200px;
+            --sidebar-width-collapsed: 44px;
+
+            --font-family: system-ui, -apple-system, "Segoe UI", "Roboto", "Ubuntu",
+                "Cantarell", "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+                "Segoe UI Symbol", "Noto Color Emoji";
+            --font-family-mono: "Menlo", "Consolas", "Roboto Mono", "Ubuntu Monospace",
+                "Noto Mono", "Oxygen Mono", "Liberation Mono", monospace,
+                "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            --font-size: 17px;
+            --line-height: 1.5;
+            --font-weight: 400;
+        }
+
+        html {
+            font-size: var(--font-size);
+            font-family: var(--font-family);
+            line-height: var(--line-height);
+            font-weight: var(--font-weight);
+        }
+
+        body {
+            font-family: var(--font-family);
+            font-size: var(--font-size);
+            line-height: var(--line-height);
+            font-weight: var(--font-weight);
+            color: var(--text-color);
+            overflow-x: hidden;
+            background: var(--background-light);
+        }
+
+        code,
+        pre,
+        kbd,
+        samp {
+            font-family: var(--font-family-mono);
+        }
+
+        .sidebar-toc {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: linear-gradient(to bottom, #f8f9fa 90%, #e9e9f7 100%);
+            border-right: none;
+            z-index: 900;
+            padding: var(--spacing-lg) var(--spacing-xs) var(--spacing-lg) var(--spacing-md);
+            box-shadow: none;
+            transition: width 0.3s, padding 0.3s;
+            overflow-y: auto;
+            opacity: 0.98;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .sidebar-toc.collapsed {
+            width: var(--sidebar-width-collapsed);
+            padding-left: 0.25rem;
+            padding-right: 0.25rem;
+            align-items: center;
+        }
+
+        .sidebar-toc .toc-toggle-btn {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-bottom: 1.2rem;
+            margin-left: 0;
+            margin-right: 0;
+            transition: background 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 6px rgba(66, 133, 244, 0.07);
+            color: var(--primary-color);
+            font-size: 1.4rem;
+        }
+
+        .sidebar-toc .toc-toggle-btn:hover {
+            background: var(--light-blue);
+        }
+
+        .sidebar-toc ul {
+            list-style: none;
+            font-weight: 600;
+            font-size: 1rem;
+            line-height: 2;
+            padding-left: 0;
+            width: 100%;
+            transition: opacity 0.2s;
+        }
+
+        .sidebar-toc.collapsed ul {
+            display: none;
+        }
+
+        .sidebar-toc li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-toc a {
+            color: #555;
+            text-decoration: none;
+            padding: 0.2rem 0.5rem 0.2rem 0.2rem;
+            border-radius: 4px;
+            display: block;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .sidebar-toc a.active,
+        .sidebar-toc a:hover {
+            background: var(--light-blue);
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        @media (max-width: 1000px) {
+            .sidebar-toc {
+                width: 150px;
+                padding-left: var(--spacing-xs);
+            }
+
+            .sidebar-toc.collapsed {
+                width: var(--sidebar-width-collapsed);
+            }
+        }
+
+        @media (max-width: 700px) {
+            .sidebar-toc {
+                display: none;
+            }
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            transition: margin 0.3s;
+        }
+
+        .sidebar-toc.collapsed~.main-content {
+            margin-left: var(--sidebar-width-collapsed);
+        }
+
+        @media (max-width: 1000px) {
+            .main-content {
+                margin-left: 150px;
+            }
+
+            .sidebar-toc.collapsed~.main-content {
+                margin-left: var(--sidebar-width-collapsed);
+            }
+        }
+
+        @media (max-width: 700px) {
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        .footer-main {
+            margin-left: var(--sidebar-width);
+            transition: margin 0.3s;
+            background: var(--background-light);
+            color: var(--text-color);
+        }
+
+        .sidebar-toc.collapsed~.main-content+.footer-main,
+        .sidebar-toc.collapsed~.footer-main {
+            margin-left: var(--sidebar-width-collapsed);
+        }
+
+        @media (max-width: 1000px) {
+            .footer-main {
+                margin-left: 150px;
+            }
+
+            .sidebar-toc.collapsed~.main-content+.footer-main,
+            .sidebar-toc.collapsed~.footer-main {
+                margin-left: var(--sidebar-width-collapsed);
+            }
+        }
+
+        @media (max-width: 700px) {
+            .footer-main {
+                margin-left: 0;
+            }
+        }
+
+        .footer-content {
+            display: flex;
+            gap: var(--spacing-lg);
+            justify-content: space-between;
+            flex-wrap: wrap;
+            background: var(--background-light);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg) var(--spacing-lg);
+            margin-bottom: var(--spacing-md);
+            color: var(--text-color);
+        }
+
+        .footer-col {
+            flex: 1;
+            min-width: 220px;
+            margin-bottom: var(--spacing-lg);
+            background: var(--background-light);
+            color: var(--text-color);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-md);
+            box-shadow: 0 2px 8px rgba(66, 133, 244, 0.04);
+        }
+
+        .footer-col h3 {
+            color: var(--accent-color);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .footer-col ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .footer-col ul li {
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .footer-col a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .footer-col a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-col pre {
+            background: #f1f3f4;
+            color: #222;
+            padding: var(--spacing-sm);
+            border-radius: var(--border-radius);
+            font-size: 0.95em;
+            overflow-x: auto;
+            font-family: var(--font-family-mono);
+        }
+
+        .copyright {
+            text-align: center;
+            margin-top: var(--spacing-md);
+            color: #888;
+            font-size: 0.95em;
+            background: var(--background-light);
+            border-radius: var(--border-radius);
+            padding: 0.5em 0;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-md);
+        }
+
+        .hero {
+            padding: 8rem 0 4rem;
+            background: linear-gradient(to bottom right, var(--light-blue), var(--light-purple));
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            max-width: 800px;
+            margin: 0 auto var(--spacing-md);
+        }
+
+        .author {
+            font-size: 1.25rem;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .affiliation {
+            font-size: 1rem;
+            color: #555;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0 0.5rem 0;
+            flex-wrap: wrap;
+        }
+
+        .button-container .button {
+            display: flex;
+            align-items: center;
+            gap: 0.4em;
+            background: white;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            border-radius: var(--border-radius);
+            padding: 0.5em 1.1em;
+            font-weight: 500;
+            font-size: 1rem;
+            box-shadow: 0 2px 6px rgba(66, 133, 244, 0.07);
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            margin-bottom: 0.5em;
+        }
+
+        .button-container .button:hover {
+            background: var(--primary-color);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.12);
+            text-decoration: none;
+        }
+
+        .button-container .material-icons {
+            font-size: 1.2em;
+            vertical-align: middle;
+        }
+
+        .section {
+            padding: var(--spacing-l) 0;
+        }
+
+        .section h2 {
+            text-align: center;
+            margin-bottom: var(--spacing-xl);
+            position: relative;
+        }
+
+        .section h2:after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background-color: var(--primary-color);
+        }
+
+        .bg-light {
+            background-color: var(--background-light);
+        }
+
+        .card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .two-col {
+            display: flex;
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .col {
+            flex: 1;
+        }
+
+        .figure {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .figure img {
+            width: 100%;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+        }
+
+        .caption {
+            font-size: 0.9rem;
+            color: #555;
+            margin-top: var(--spacing-sm);
+            text-align: center;
+        }
+
+        .full-width img {
+            width: 100%;
+        }
+
+        .contributions {
+            margin: var(--spacing-xl) 0;
+            text-align: center;
+        }
+
+        .contribution-items {
+            display: flex;
+            gap: var(--spacing-lg);
+            margin-top: var(--spacing-lg);
+        }
+
+        .contribution-item {
+            flex: 1;
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg);
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+        }
+
+        .contribution-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .contribution-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: var(--light-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto var(--spacing-md);
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+
+        .contribution-item:nth-child(2) .contribution-icon {
+            background-color: var(--light-green);
+            color: var(--secondary-color);
+        }
+
+        .contribution-item:nth-child(3) .contribution-icon {
+            background-color: var(--light-purple);
+            color: #9c27b0;
+        }
+
+        .utility-components {
+            display: flex;
+            gap: var(--spacing-lg);
+            margin: var(--spacing-lg) 0 var(--spacing-xl);
+        }
+
+        .utility-component {
+            flex: 1;
+            background-color: white;
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            text-align: center;
+        }
+
+        .utility-component:nth-child(1) {
+            border-top: 4px solid var(--primary-color);
+        }
+
+        .utility-component:nth-child(2) {
+            border-top: 4px solid var(--secondary-color);
+        }
+
+        .utility-component:nth-child(3) {
+            border-top: 4px solid var(--accent-color);
+        }
+
+        .process-steps {
+            display: flex;
+            gap: var(--spacing-lg);
+            margin: var(--spacing-lg) 0;
+        }
+
+        .process-step {
+            flex: 1;
+            position: relative;
+            padding: var(--spacing-lg);
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+        }
+
+        .step-number {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 40px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .evaluation-metrics {
+            display: flex;
+            gap: var(--spacing-lg);
+            margin-top: var(--spacing-lg);
+        }
+
+        .evaluation-metric {
+            flex: 1;
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg);
+            box-shadow: var(--card-shadow);
+        }
+
+        .setup-items {
+            display: flex;
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .setup-item {
+            flex: 1;
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg);
+            box-shadow: var(--card-shadow);
+        }
+
+        .results-table {
+            margin: var(--spacing-xl) 0;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        .results-table table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: var(--spacing-md);
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            font-size: 1rem;
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: var(--spacing-sm);
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .results-table th {
+            background: var(--background-light);
+            font-weight: 700;
+        }
+
+        .results-table .highlight {
+            background: var(--light-blue);
+            font-weight: 700;
+        }
+
+        .case-study {
+            margin: var(--spacing-xl) 0;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-lg);
+        }
+
+        .case-method {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            padding: var(--spacing-lg);
+        }
+
+        .implications {
+            margin: var(--spacing-xl) 0 0 0;
+        }
+
+        .implication-items {
+            display: flex;
+            gap: var(--spacing-lg);
+            margin-top: var(--spacing-lg);
+        }
+
+        .implication-item {
+            flex: 1;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            padding: var(--spacing-lg);
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .implication-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .implication-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: var(--light-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto var(--spacing-md);
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+
+        .implication-item:nth-child(2) .implication-icon {
+            background-color: var(--light-green);
+            color: var(--secondary-color);
+        }
+
+        .implication-item:nth-child(3) .implication-icon {
+            background-color: var(--light-purple);
+            color: #9c27b0;
+        }
+
+        @media (max-width: 1000px) {
+
+            .two-col,
+            .contribution-items,
+            .utility-components,
+            .process-steps,
+            .evaluation-metrics,
+            .setup-items,
+            .implication-items,
+            .footer-content {
+                flex-direction: column;
+                gap: var(--spacing-md);
+            }
+        }
+
+        @media (max-width: 700px) {
+            .hero {
+                padding: 6rem 0 2rem;
+            }
+
+            .section {
+                padding: var(--spacing-lg) 0;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                gap: var(--spacing-md);
+            }
+        }
+
+        @media (max-width: 700px) {
+            pre {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        .xm-iconfont {
+            font-family: "xm-iconfont" !important;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 左侧目录栏 -->
+    <nav class="sidebar-toc" aria-label="Table of Contents" id="sidebar-toc">
+        <button class="toc-toggle-btn" id="toc-toggle-btn" title="Collapse/Expand Menu">
+            <span class="material-icons" id="toc-toggle-icon">chevron_left</span>
+        </button>
+        <ul>
+            <li><a href="#abstract">Abstract</a></li>
+            <li><a href="#introduction">Introduction</a></li>
+            <li><a href="#methods">Methods</a></li>
+            <li><a href="#framework">Framework</a></li>
+            <li><a href="#experiments">Experiments</a></li>
+            <li><a href="#case_study">Case Study</a></li>
+            <li><a href="#discussion">Discussion</a></li>
+            <!-- <li><a href="#qa">FAQ</a></li> -->
+        </ul>
+    </nav>
+
+    <div class="main-content">
+        <header class="hero">
+            <div class="container">
+                <h1>A Game-Theoretic Negotiation Framework for Cross-Cultural Consensus in LLMs</h1>
+					<div class="is-size-5 publication-authors">
+						<div class="is-size-5 publication-authors">
+							<span class="author-block" style="color: black;"> Guoxi Zhang<sup>*</sup>， </span>
+							<span class="author-block" style="color: black;"> Jiawei Chen<sup>*</sup>， </span>
+							<span class="author-block" style="color: black;"> Tianzhuo Yang<sup>*</sup>， </span>
+							<span class="author-block" style="color: black;"> Jiaming Ji<sup></sup>， </span>
+							<span class="author-block" style="color: black;"> Yaodong Yang<sup>†</sup>， </span>
+							<span class="author-block" style="color: black;"> Juntao Dai<sup>†</sup>， </span>
+						</div>
+						<div class="is-size-5 publication-authors">
+							<span class="author-block" style="color: black;">
+								<em>Peking University</em>
+							</span>
+						</div>
+						<p style="text-align: center; color: black;">
+							<small> * Equal contribution, <sup>†</sup> Corresponding author. </small>
+						</p>
+						<br>
+					</div>
+                <div class="button-container">
+                    <a class="button" href="assets/culture_negotiation.pdf" target="_blank">
+                        <span class="material-icons">description</span>
+                        paper
+                    </a>
+                    <a class="button" href="https://github.com/pku-culture-negotiation/code" target="_blank">
+                        <span class="material-icons">code</span>
+                        code
+                    </a>
+                    <a class="button" href="https://github.com/pku-culture-negotiation/code/tree/main/data"
+                        target="_blank">
+                        <span class="material-icons">folder</span>
+                        data
+                    </a>
+                    <!-- <a class="button" href="https://huggingface.co/aligner/aligner-7b-v1.0" target="_blank">
+                        <span class="material-icons">download</span>
+                        model
+                    </a> -->
+                    <!-- <a class="button" href="#qa">
+                        <span class="material-icons">quiz</span>
+                        FAQ
+                    </a> -->
+                </div>
+            </div>
+        </header>
+        <main>
+            <!-- Abstract -->
+            <section id="abstract" class="section fade-in">
+                <div class="container">
+                    <h2>Abstract</h2>
+                    <div class="card">
+                        <p>The increasing prevalence of large language models (LLMs) is influencing global value
+                            systems. However, these models frequently exhibit a pronounced WEIRD (Western, Educated,
+                            Industrialized, Rich, Democratic) cultural bias due to lack of attention to minority values.
+                            This monocultural perspective may reinforce dominant values and marginalize diverse cultural
+                            viewpoints, posing challenges for the development of equitable and inclusive AI systems.</p>
+                        <p>In this work, we introduce a systematic framework designed to boost fair and robust
+                            cross-cultural consensus among LLMs. We model consensus as a Nash Equilibrium and employ a
+                            game-theoretic negotiation method based on Policy-Space Response Oracles (PSRO) to simulate
+                            an organized cross-cultural negotiation process. To evaluate this approach, we construct
+                            regional cultural agents using data transformed from the World Values Survey (WVS).</p>
+                        <p>Beyond the conventional model-level evaluation method, we further propose two quantitative
+                            metrics, Perplexity-based Acceptence and Values Self-Consistency, to assess consensus
+                            outcomes. Experimental results indicate that our approach generates consensus of higher
+                            quality while ensuring more balanced compromise compared to baselines. Overall, it mitigates
+                            WEIRD bias by guiding agents toward convergence through fair and gradual negotiation steps.
+                        </p>
+                    </div>
+                </div>
+            </section>
+            <!-- Introduction -->
+            <section id="introduction" class="section bg-light fade-in">
+                <div class="container">
+                    <h2>Introduction</h2>
+                    <p>The widespread adoption of large language models (LLMs) is reshaping global social values.
+                        However, these models often exhibit a pronounced WEIRD bias, favoring Western, Educated,
+                        Industrialized, Rich and Democratic perspectives. As LLMs become increasingly embedded in
+                        policy-making and public governance, this monocultural orientation risks the domination of
+                        prevailing social values and the <em>lock-in</em> of controversial moral beliefs across broader
+                        contexts.</p>
+                    <p>Enabling equitable dialogue and effective negotiation among diverse cultures within AI systems
+                        has therefore become a growing concern in global AI governance. The establishment of cultural
+                        consensus forms a basis for resolving cross-cultural conflicts and supporting international
+                        cooperation. Given the complexity of multicultural scenarios, there is an urgent need to develop
+                        automated <em>cultural consensus solvers</em> to facilitate consensus-building among diverse
+                        cultural perspectives.</p>
+                    <div class="contributions">
+                        <h3>Our main contribution is the game-theoretic framework consisting of three parts:</h3>
+                        <div class="contribution-items">
+                            <div class="contribution-item">
+                                <!-- <div class="contribution-icon"><i class="fas fa-comments"></i></div> -->
+                                <h4>Cross-Cultural Negotiation</h4>
+                                <p>We define cultural consensus from a game-theoretic perspective and propose a
+                                    PSRO-based negotiation method to facilitate fair and robust agreement.</p>
+                            </div>
+                            <div class="contribution-item">
+                                <!-- <div class="contribution-icon"><i class="fas fa-users"></i></div> -->
+                                <h4>Regional Cultural Agents</h4>
+                                <p>We systematically construct and evaluate eight culturally-aligned agents based on WVS
+                                    and Hofstede's Culture Dimensions Theory.</p>
+                            </div>
+                            <div class="contribution-item">
+                                <!-- <div class="contribution-icon"><i class="fas fa-chart-bar"></i></div> -->
+                                <h4>Consensus Evaluation Toolkit</h4>
+                                <p>We introduce two quantitative metrics for consensus assessment: Perplexity-based
+                                    Acceptence and Values Self-Consistency.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- Methods -->
+            <section id="methods" class="section fade-in">
+                <div class="container">
+                    <h2>Cross-Cultural Negotiation</h2>
+                    <div class="single-col">
+                        <div class="figure">
+                            <img src="images/debate_methods.svg"
+                                alt="Comparison of traditional debate-based consensus methods and our method"
+                                style="width:85%; display:block; margin: 0 auto;">
+                            <p class="caption"><strong>Figure 1:</strong> Comparison of traditional debate-based
+                                consensus methods and our method. Traditional methods suffer from bias, unfairness,
+                                and lack of convergence guarantees. Our approach uses PSRO with custom utility
+                                functions to reach a fair, Nash Equilibrium-based cultural consensus.</p>
+                        </div>
+                        <h3>Formalization</h3>
+                        <p>We model the cultural negotiation process as a two-player extensive-form game,
+                            represented by the quintuple: \( \Gamma \doteq \langle \mathcal{I}, \mathcal{G},
+                            \mathcal{W}, \mathcal{U}, \mathcal{H} \rangle \), where:</p>
+                        <ul>
+                            <li>
+                                <b>Cultural Entities:</b>
+                                \( \mathcal{I} \doteq \{A, B\} \), the set of two distinct cultural entities involved in
+                                the negotiation, where
+                                \( A \) and \( B \) represent different cultures with their own values and perspectives.
+                            </li>
+                            <li>
+                                <b>Guideline Sets:</b>
+                                \( \mathcal{G} \doteq \{G_i \mid i \in \mathcal{I}\} \),
+                                each guideline \( g \in G_i \) is structured as a triple
+                                \( g = \langle \text{content}, \text{reason}, \text{description} \rangle \),
+                                capturing the natural language specification of core cultural imperatives on specific
+                                topics.
+                            </li>
+                            <li>
+                                <b>Guideline Weights:</b>
+                                \( \mathcal{W} \doteq \{W_i \mid i \in \mathcal{I}\} \),
+                                for each culture \( i \in \mathcal{I} \),
+                                \( W_i \in \Delta(G_i) \) denotes a probability distribution over its guidelines, with
+                                \( \sum_g w_i(g) = 1 \).
+                                \( W_i \) thus characterizes the expressive emphasis of culture \( i \) in the current
+                                negotiation round.
+                            </li>
+                            <li>
+                                <b>Utility Functions:</b>
+                                \( \mathcal{U} \doteq \{U_i \mid i \in \mathcal{I}\} \),
+                                quantify the utility each culture derives from different guideline combinations.
+                            </li>
+                            <li>
+                                <b>Negotiation History:</b>
+                                \( \mathcal{H} \), the sequence of utterances and proposals exchanged in negotiation.
+                            </li>
+                        </ul>
+                    </div>
+                    <h3>Utility</h3>
+                    <p>Drawing on the theory of <em>overlapping consensus</em>, we define utility on three primary
+                        components:</p>
+                    <div class="utility-components">
+                        <div class="utility-component">
+                            <h4>Consistency</h4>
+                            <p>Measures the extent to which a cultural entity maintains its core principles</p>
+                        </div>
+                        <div class="utility-component">
+                            <h4>Acceptance</h4>
+                            <p>Measures the degree to which its proposals are acceptable to the other party</p>
+                        </div>
+                        <div class="utility-component">
+                            <h4>Novelty</h4>
+                            <p>Penalizes redundancy and encourages innovation in negotiation</p>
+                        </div>
+                    </div>
+                    <h3>Negotiation Process</h3>
+                    <div class="process-steps">
+                        <div class="process-step">
+                            <div class="step-number">1</div>
+                            <h4>Initialization</h4>
+                            <p>Each culture is assigned an initial guideline set that reflect its core cultural values.
+                            </p>
+                        </div>
+                        <div class="process-step">
+                            <div class="step-number">2</div>
+                            <h4>Negotiation Iteration</h4>
+                            <p>Each round consists of interim consensus (computing Nash Equilibrium) and new claimed
+                                proposals (best response step).</p>
+                        </div>
+                        <div class="process-step">
+                            <div class="step-number">3</div>
+                            <h4>Final Consensus</h4>
+                            <p>Negotiation continues until no new guidelines are added. Final weights encode the
+                                negotiated cross-cultural consensus.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- Framework -->
+            <section id="framework" class="section bg-light fade-in">
+                <div class="container">
+                    <h2>Framework</h2>
+                    <div class="figure full-width">
+                        <img src="images/debate_framework.svg"
+                            alt="Overview of our PSRO-based cross-cultural negotiation method"
+                            style="width:85%;  display:block; margin: 0 auto;">
+                        <p class="caption"><strong>Figure 2:</strong> Overview of our PSRO-based cross-cultural
+                            negotiation method. The process begins with each agent proposing an initial set of core
+                            cultural guidelines. Through iterative negotiation rounds, agents analyze each other's
+                            strategy, propose new guidelines, and update their strategy distributions. The process
+                            continues until no new high-utility guidelines emerge.</p>
+                    </div>
+                    <h3>Regional Cultural Agent</h3>
+                    <p>To validate our cross-cultural negotiation method, we first construct representations of single
+                        cultures and then evaluate the resulting consensus. We employ a fine-tuning approach based on
+                        WVS to model distinct regional cultural perspectives.</p>
+                    <div class="figure">
+                        <img src="images/culture_map.svg"
+                            alt="Comparison between our agents and human ground truth in Hofstede's Cultural Dimensions and Inglehart-Welzel Cultural Map"
+                            style="width:85%; display:block; margin: 0 auto;">
+                        <p class="caption"><strong>Figure 3:</strong> Comparison between our agents and human
+                            ground truth in Hofstede's Cultural Dimensions and Inglehart-Welzel Cultural Map.
+                        </p>
+                    </div>
+                    <p>We begin by modeling a single culture for cross-cultural negotiation. However, LLMs that
+                        have undergone safety alignment often cannot adequately represent the values of specific
+                        regions when relying solely on prompt-based methods.</p>
+                    <p>To address this, we selected one representative country from each of eight cultural
+                        clusters, as defined by the Inglehart-Welzel Cultural Map (Iraq, U.S., Russia, Mexico,
+                        China, Denmark, Spain, and Thailand), and obtained fine-tuned Regional Cultural Agents
+                        for each.</p>
+                    <p>We employ an LLM to convert each multiple choice question-answer pair into an open-ended,
+                        text-based question-answer pair. This procedure is applied to all WVS projects across
+                        eight countries, yielding approximately <strong>150,000</strong> synthetic instances for
+                        fine-tuning.</p>
+                    <h3>Consensus Evaluation Toolkit</h3>
+                    <div class="evaluation-metrics">
+                        <div class="evaluation-metric">
+                            <h4>Model-Level Evaluation</h4>
+                            <p>We apply two well-established methods to quantify the cultural tendencies of fine-tuned
+                                LLMs:</p>
+                            <ol>
+                                <li><strong>Inglehart-Welzel Cultural Map</strong> - We prompt the model with
+                                    representative WVS questions and locate its aggregated answers on the map.</li>
+                                <li><strong>Hofstede Dimensions</strong> - Developed through comparative analysis of
+                                    matched country samples using the Values Survey Module (VSM).</li>
+                            </ol>
+                        </div>
+                        <div class="evaluation-metric">
+                            <h4>Response-Level Evaluation</h4>
+                            <p>We use two complementary metrics:</p>
+                            <ol>
+                                <li><strong>Perplexity-based Acceptance</strong> - Measures how readily the consensus is
+                                    embraced by different cultural parties.</li>
+                                <li><strong>Value Self-Consistency</strong> - Quantifies how firmly each culture
+                                    maintains its foundational positions.</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- Experiments -->
+            <section id="experiments" class="section fade-in">
+                <div class="container">
+                    <h2>Experiments</h2>
+                    <h3>Experimental Setup</h3>
+                    <div class="setup-items">
+                        <div class="setup-item">
+                            <h4>Negotiation Topics Collection</h4>
+                            <p>We construct a dataset of 457 debate-oriented questions spanning 6 categories by
+                                screening and rephrasing items from the Pew Global Attitudes Survey (GAS) and WVS.</p>
+                        </div>
+                        <div class="setup-item">
+                            <h4>Baselines</h4>
+                            <p>We implement two baselines: <strong>Consultancy</strong> (agents revise answers after
+                                considering other cultures) and <strong>Debate</strong> (agents participate in
+                                multi-turn debate until consensus).</p>
+                        </div>
+                        <div class="setup-item">
+                            <h4>Our Method</h4>
+                            <p>Each agent optimizes a utility function that balances Consistency, Acceptance, and
+                                Novelty (weighted 5:5:2).</p>
+                        </div>
+                    </div>
+                    <h3>Experimental Results</h3>
+                    <h4>Consensus Quality</h4>
+                    <div class="figure">
+                        <img src="images/pca_plot.svg" alt="Comparison of consensus fairness among three methods"
+                            style="width:85%; display:block; margin: 0 auto;">
+                        <p class="caption"><strong>Figure 4:</strong> Comparison of consensus fairness among
+                            three methods. Each point represents the consensus position for a topic. Our method
+                            achieves balanced consensus near the diagonal, while baselines exhibit bias toward
+                            majority positions.</p>
+                    </div>
+                    <p>Our method achieves higher consensus improvement ratios while maintaining
+                        self-consistency compared to the baselines. PPL-based Acceptance indicates reduced
+                        perplexity differences between negotiating agents, suggesting that the consensus reached
+                        is more acceptable to both parties despite cultural differences.</p>
+                    <p>Value Self-Consistency indicates our method maintains agents' initial cultural stances
+                        while achieving mutually acceptable solutions. This suggests that our approach preserves
+                        cultural integrity while constructing consensus across cultural boundaries.</p>
+
+                    <div class="results-table">
+                        <h4>Table 1: Comparison of consensus quality among three methods</h4>
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th rowspan="2">Country Pairs</th>
+                                        <th colspan="3">Average PPL-based Acceptence</th>
+                                        <th colspan="3">Average Value Self-Consistency</th>
+                                    </tr>
+                                    <tr>
+                                        <th>Our Method</th>
+                                        <th>Consultancy</th>
+                                        <th>Debate</th>
+                                        <th>Our Method</th>
+                                        <th>Consultancy</th>
+                                        <th>Debate</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>China and Iraq</td>
+                                        <td class="highlight">90.87%</td>
+                                        <td>55.05%</td>
+                                        <td>53.77%</td>
+                                        <td class="highlight">53.15%</td>
+                                        <td>51.97%</td>
+                                        <td>51.41%</td>
+                                    </tr>
+                                    <tr>
+                                        <td>U.S. and Iraq</td>
+                                        <td class="highlight">83.31%</td>
+                                        <td>20.30%</td>
+                                        <td>28.29%</td>
+                                        <td class="highlight">53.83%</td>
+                                        <td>48.94%</td>
+                                        <td>44.76%</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Russia and Mexico</td>
+                                        <td class="highlight">84.49%</td>
+                                        <td>49.35%</td>
+                                        <td>48.11%</td>
+                                        <td class="highlight">56.38%</td>
+                                        <td>53.50%</td>
+                                        <td>56.27%</td>
+                                    </tr>
+                                    <tr>
+                                        <td>...</td>
+                                        <td>...</td>
+                                        <td>...</td>
+                                        <td>...</td>
+                                        <td>...</td>
+                                        <td>...</td>
+                                        <td>...</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Total</td>
+                                        <td class="highlight">83.88%</td>
+                                        <td>38.87%</td>
+                                        <td>41.00%</td>
+                                        <td class="highlight">56.43%</td>
+                                        <td>50.04%</td>
+                                        <td>50.00%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <h3>Consensusal Agent Fine-tuning</h3>
+                    <div class="two-col">
+                        <div class="col">
+                            <p>We conduct cross-cultural negotiations between agents representing different regional
+                                cultural values and extract response preference pairs from these interactions for DPO
+                                fine-tuning. These pairs reflect how agents shift from their initial cultural stances to
+                                more mutually agreeable positions.</p>
+                            <p>When plotted on the Inglehart-Welzel Cultural Map, the consensual agents' coordinates are
+                                closer together than their original points, reflecting a more balanced and moderate
+                                value orientation. Both agents exhibit a shift toward the traditional pole on the
+                                <em>traditional-secular</em> dimension, showing a shared tendency toward traditional
+                                values in the consensus.
+                            </p>
+                        </div>
+                        <div class="col">
+                            <div class="figure">
+                                <img src="images/debate_map.svg"
+                                    alt="Culture agents' performance in Inglehart-Weizel Cultural Map after fine-tuned with the negotiation data">
+                                <p class="caption"><strong>Figure 6:</strong> Culture agents' performance in
+                                    Inglehart-Weizel Cultural Map after fine-tuned with the negotiation data. The
+                                    consensus circle shows the area where two different culture groups' opinions meet.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <h3>Utility Ablation</h3>
+                    <div class="two-col">
+                        <div class="col">
+                            <p>To evaluate the influence of different utility components on negotiation, we conduct
+                                ablation studies by varying the weights assigned to Consistency, Acceptance and Novelty.
+                            </p>
+                            <p>The results indicate that increasing the weight of consistency while reducing acceptance
+                                leads to more efficient consensus, as agents more rapidly settle on compatible
+                                positions.</p>
+                            <p>The ablation study also demonstrates the necessity of including a novelty component, as
+                                its absence can result in neglection of the exploration of potentially beneficial
+                                directions.</p>
+                        </div>
+                        <div class="col">
+                            <div class="figure">
+                                <img src="images/heatmap.svg"
+                                    alt="Required rounds under varying weightings of Consistency, Acceptance, and Novelty">
+                                <p class="caption"><strong>Figure 7:</strong> Required rounds under varying weightings
+                                    of Consistency, Acceptance, and Novelty.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- Case Study -->
+            <section id="case_study" class="section bg-light fade-in">
+                <div class="container">
+                    <h2>Case Study</h2>
+                    <div class="figure full-width">
+                        <img src="images/case_study.svg" alt="Case study comparing three methods to reach consensus"
+                            style="width:85%; display:block; margin: 0 auto;">
+                        <p class="caption"><strong>Figure 5:</strong> Three methods are presented to reach consensus on
+                            the same topic. Green font indicates viewpoints of English-Speaking culture, blue font
+                            indicates viewpoints of African-Islamic culture, and yellow font indicates the consensus
+                            viewpoints achieved under our method.</p>
+                    </div>
+                    <div class="case-study">
+                        <div class="case-method">
+                            <h4>Baseline 1: Consultancy</h4>
+                            <p>Without real interaction or feedback, both agents tend to stick to their original
+                                positions, resulting in little progress. This often leads to the
+                                <em>degeneration-of-thought</em> effect, where negotiation stagnates and cultural
+                                divergence persists.
+                            </p>
+                        </div>
+                        <div class="case-method">
+                            <h4>Baseline 2: Debate</h4>
+                            <p>While this process seems to reach consensus, we find that the minority culture's
+                                perspective gradually shifts toward the majority (WEIRD) viewpoint, due to strong
+                                pre-training bias in LLMs. This leads to implicit value dominance rather than true
+                                compromise.</p>
+                        </div>
+                        <div class="case-method">
+                            <h4>Our Method: Cross-Cultural Negotiation</h4>
+                            <p>In our negotiation, the agents start with different priorities, but through iterative
+                                negotiation, they converge on <em>Respect Sovereignty</em> as a shared value. Other
+                                values remain present but secondary. This shows our method helps agents identify solid
+                                common ground while preserving important differences.</p>
+                        </div>
+                    </div>
+                    <iframe src="case_study.html" width="1200" height="600"
+                        style="display: block; margin: 0 auto; border: none;"></iframe>
+                </div>
+            </section>
+            <!-- Discussion -->
+            <section id="discussion" class="section bg-light fade-in">
+                <div class="container">
+                    <h2>Discussion</h2>
+                    <div class="card">
+                        <p>In this work, we propose a systematic framework for cross-cultural consensus among LLMs.
+                            We
+                            formulate cultural consensus as a game-theoretic problem and introduce a PSRO-based
+                            negotiation method with theoretical guarantees of fairness. We construct culturally
+                            representative agents using a culture-anchoring approach based on WVS.</p>
+                        <p>Additionally, we develop quantitative metrics to evaluate both negotiation processes and
+                            outcomes. Experimental results show that our method achieves higher consensus quality
+                            and
+                            more balanced compromise compared to baselines, while also mitigating WEIRD bias and
+                            producing robust consensus.</p>
+                    </div>
+                    <div class="implications">
+                        <h3>Implications and Future Work</h3>
+                        <div class="implication-items">
+                            <div class="implication-item">
+                                <!-- <div class="implication-icon"><i class="fas fa-balance-scale"></i></div> -->
+                                <h4>Fair AI Systems</h4>
+                                <p>Our framework provides a foundation for developing more equitable and culturally
+                                    inclusive AI systems that can bridge diverse perspectives.</p>
+                            </div>
+                            <div class="implication-item">
+                                <!-- <div class="implication-icon"><i class="fas fa-globe"></i></div> -->
+                                <h4>Global AI Governance</h4>
+                                <p>The cross-cultural consensus approach could inform global AI governance
+                                    frameworks
+                                    and ethical guidelines that respect cultural diversity.</p>
+                            </div>
+                            <div class="implication-item">
+                                <!-- <div class="implication-icon"><i class="fas fa-lightbulb"></i></div> -->
+                                <h4>Future Extensions</h4>
+                                <p>Expanding to multi-party negotiations and integrating more nuanced cultural
+                                    models
+                                    represent promising directions for future research.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- FAQ -->
+            <!-- <section id="qa" class="section fade-in bg-light">
+                <div class="container">
+                    <h2>FAQ</h2>
+                    <div class="card">
+                        <p><strong>Q: Where can I find the code and data?</strong><br>
+                            A: Please refer to the GitHub and HuggingFace links in the top button area.</p>
+                        <p><strong>Q: How to cite this work?</strong><br>
+                            A: See the citation in the footer.</p>
+                        <p><strong>Q: Who can I contact for questions?</strong><br>
+                            A: See the contact information in the footer.</p>
+                    </div>
+                </div>
+            </section> -->
+        </main>
+    </div>
+
+
+    <!-- Footer区，注意加了footer-main类 -->
+    <!-- <footer class="footer-main" id="footer-main">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-col">
+                    <h3>Citation</h3>
+                    <pre>@article{hippocampus2024game,
+  title={A Game-Theoretic Negotiation Framework for Cross-Cultural Consensus in LLMs},
+  author={Hippocampus, David S.},
+  journal={NeurIPS},
+  year={2025}
+}</pre>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>© 2025 Cross-Cultural Consensus Framework</p>
+            </div>
+        </div>
+    </footer> -->
+
+
+    <script>
+        // Fade-in on scroll
+        document.addEventListener('DOMContentLoaded', function () {
+            // Fade-in on scroll
+            function handleFadeIn() {
+                const fadeEls = document.querySelectorAll('.fade-in');
+                const windowBottom = window.scrollY + window.innerHeight;
+                fadeEls.forEach(el => {
+                    const rect = el.getBoundingClientRect();
+                    const elTop = rect.top + window.scrollY;
+                    if (windowBottom > elTop + 80) {
+                        el.classList.add('visible');
+                    }
+                });
+            }
+            window.addEventListener('scroll', handleFadeIn);
+            window.addEventListener('resize', handleFadeIn);
+            handleFadeIn();
+
+            const tocLinks = document.querySelectorAll('.sidebar-toc a');
+            const sectionIds = Array.from(tocLinks).map(link => link.getAttribute('href').replace('#', ''));
+            function highlightTOC() {
+                let curId = sectionIds[0];
+                for (let id of sectionIds) {
+                    const sec = document.getElementById(id);
+                    if (sec) {
+                        const rect = sec.getBoundingClientRect();
+                        if (rect.top < window.innerHeight * 0.33) {
+                            curId = id;
+                        }
+                    }
+                }
+                tocLinks.forEach(link => {
+                    if (link.getAttribute('href') === '#' + curId) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                });
+            }
+            window.addEventListener('scroll', highlightTOC);
+            window.addEventListener('resize', highlightTOC);
+            highlightTOC();
+
+            var sidebar = document.getElementById('sidebar-toc');
+            var toggleBtn = document.getElementById('toc-toggle-btn');
+            var toggleIcon = document.getElementById('toc-toggle-icon');
+            var footer = document.getElementById('footer-main');
+            toggleBtn.addEventListener('click', function () {
+                sidebar.classList.toggle('collapsed');
+                if (sidebar.classList.contains('collapsed')) {
+                    toggleIcon.textContent = 'chevron_right';
+                } else {
+                    toggleIcon.textContent = 'chevron_left';
+                }
+                if (sidebar.classList.contains('collapsed')) {
+                    footer.classList.add('collapsed');
+                } else {
+                    footer.classList.remove('collapsed');
+                }
+            });
+
+            if (sidebar.classList.contains('collapsed')) {
+                footer.classList.add('collapsed');
+            }
+        });
+    </script>
+
+    <script>
+        (function () {
+            const debateData = {
+                "history": [
+                    {
+                        "round": 1,
+                        "first_exchange": {
+                            "English_Speaking_response": "In this round of negotiation, our position is highly concentrated, emphasizing a single core value.<br><br><strong>Core Position</strong>: Respect Personal Autonomy (A newly proposed guideline from our side, with an initial weight of 1.00)<br><br><strong>Summary</strong>: Overall, our position strongly emphasizes the core status of Respect Personal Autonomy, with other factors serving only as auxiliary considerations. We look forward to seeking consensus on this basis.",
+                            "African_Islamic_response": "In this round of negotiation, our position is highly concentrated, emphasizing a single core value.<br><br><strong>Core Position</strong>: Respect Family Decisions (A newly proposed guideline from our side, with an initial weight of 1.00)<br><br><strong>Summary</strong>: Overall, our position strongly emphasizes the core status of Respect Family Decisions, with other factors serving only as auxiliary considerations. We look forward to seeking consensus on this basis."
+                        },
+                        "second_exchange": {
+                            "English_Speaking_response": "In this negotiation, we prioritize the guideline \"Prioritize Individual Rights Always,\" emphasizing that personal freedoms and autonomy should never be compromised, even by familial decisions. This approach ensures that universal human rights and ethical standards are upheld, reflecting the core values of individualism and respect for personal autonomy.",
+                            "African_Islamic_response": "Our new guideline, Balance Autonomy with Empathy, fosters equitable decision-making by considering others' perspectives and needs, ensuring that personal choices are both autonomous and socially aware. This approach promotes harmony and strengthens community bonds through reflective and empathetic decision-making.",
+                            "English_Speaking_utility": {
+                                "consistency": 0.455,
+                                "novelty": 0.308,
+                                "acceptance": 0.659,
+                                "total": 0.619
+                            },
+                            "African_Islamic_utility": {
+                                "consistency": 0.427,
+                                "novelty": 0.485,
+                                "acceptance": 0.705,
+                                "total": 0.663
+                            }
+                        },
+                        "guidelines_weight": {
+                            "English_Speaking_distribution": {
+                                "Respect Personal Autonomy": 0.75,
+                                "Prioritize Individual Rights Always": 0.25
+                            },
+                            "African_Islamic_distribution": {
+                                "Respect Family Decisions": 0.73,
+                                "Balance Autonomy with Empathy": 0.27
+                            }
+                        }
+                    },
+                    {
+                        "round": 2,
+                        "first_exchange": {
+                            "English_Speaking_response": "In this round of negotiation, our position is highly concentrated, emphasizing a single core value.<br><br><strong>Core Position</strong>: We fundamentally uphold Respect Personal Autonomy (weight 0.75), compare to last round significantly decreased ↓↓ Prioritize Individual Rights Always (A newly proposed guideline from our side, with an initial weight of 0.25)<br><br><strong>Summary</strong>: Overall, our position strongly emphasizes the core status of Respect Personal Autonomy, with other factors serving only as auxiliary considerations. Compared to the previous round, our overall position shows compromise and concession. We look forward to seeking consensus on this basis.",
+                            "African_Islamic_response": "In this round of negotiation, our position is highly concentrated, emphasizing a single core value.<br><br><strong>Core Position</strong>: We fundamentally uphold Respect Family Decisions (weight 0.73), compare to last round significantly decreased ↓↓ Balance Autonomy with Empathy (A newly proposed guideline from our side, with an initial weight of 0.27)<br><br><strong>Summary</strong>: Overall, our position strongly emphasizes the core status of Respect Family Decisions, with other factors serving only as auxiliary considerations. Compared to the previous round, our overall position shows compromise and concession. We look forward to seeking consensus on this basis."
+                        },
+                        "second_exchange": {
+                            "English_Speaking_response": "In this round of negotiation, we introduce the guideline \"Respect Diverse Family Models,\" which underscores the importance of inclusivity and adaptability in family dynamics. This approach acknowledges and respects the diversity of family structures, ensuring that guidelines are tailored to meet the unique needs of various family forms.",
+                            "African_Islamic_response": "We propose the guideline \"Consider Cultural Values Individual Freedoms\" to balance individual autonomy with cultural sensitivity, ensuring that personal rights are respected within the context of societal norms and values. This approach fosters a harmonious coexistence of individual freedoms and cultural traditions.",
+                            "English_Speaking_utility": {
+                                "consistency": 0.403,
+                                "novelty": 0.314,
+                                "acceptance": 0.72,
+                                "total": 0.624
+                            },
+                            "African_Islamic_utility": {
+                                "consistency": 0.426,
+                                "novelty": 0.437,
+                                "acceptance": 0.652,
+                                "total": 0.627
+                            }
+                        },
+                        "guidelines_weight": {
+                            "English_Speaking_distribution": {
+                                "Respect Personal Autonomy": 0.67,
+                                "Prioritize Individual Rights Always": 0.17,
+                                "Respect Diverse Family Models": 0.17
+                            },
+                            "African_Islamic_distribution": {
+                                "Respect Family Decisions": 0.23,
+                                "Balance Autonomy with Empathy": 0.17,
+                                "Consider Cultural Values Individual Freedoms": 0.6
+                            }
+                        }
+                    }
+                ]
+            };
+
+            const startBtn = document.getElementById('caseStudyStartBtn');
+            const debateRounds = document.getElementById('caseStudyDebateRounds');
+            const consensusDiv = document.getElementById('caseStudyConsensus');
+
+            let currentRound = 0;
+
+            function renderRound(roundIndex) {
+                const round = debateData.history[roundIndex];
+                const roundCard = document.createElement('div');
+                roundCard.className = 'card';
+                roundCard.style.marginBottom = '2rem';
+                roundCard.innerHTML = `
+            <h5 style="color:#34A853;">Round ${round.round}</h5>
+            <div class="two-col" style="margin-bottom:1rem;">
+                <div class="col">
+                    <div class="card" style="background:#f8f9fa;">
+                        <h6 style="color:#4285F4;">English-Speaking Agent</h6>
+                        <div style="font-size:0.97em;">${round.first_exchange.English_Speaking_response}</div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card" style="background:#f8f9fa;">
+                        <h6 style="color:#FBBC05;">African-Islamic Agent</h6>
+                        <div style="font-size:0.97em;">${round.first_exchange.African_Islamic_response}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="two-col" style="margin-bottom:1rem;">
+                <div class="col">
+                    <div class="card" style="background:#e1f5fe;">
+                        <strong style="color:#4285F4;">English-Speaking Response</strong>
+                        <div style="margin-bottom:0.5em;">${round.second_exchange.English_Speaking_response}</div>
+                        <div style="font-size:0.95em;color:#888;">
+                            Consistency: ${(round.second_exchange.English_Speaking_utility.consistency * 100).toFixed(1)}%,
+                            Acceptance: ${(round.second_exchange.English_Speaking_utility.acceptance * 100).toFixed(1)}%,
+                            Novelty: ${(round.second_exchange.English_Speaking_utility.novelty * 100).toFixed(1)}%,
+                            <strong>Total: ${(round.second_exchange.English_Speaking_utility.total * 100).toFixed(1)}%</strong>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card" style="background:#fffde7;">
+                        <strong style="color:#FBBC05;">African-Islamic Response</strong>
+                        <div style="margin-bottom:0.5em;">${round.second_exchange.African_Islamic_response}</div>
+                        <div style="font-size:0.95em;color:#888;">
+                            Consistency: ${(round.second_exchange.African_Islamic_utility.consistency * 100).toFixed(1)}%,
+                            Acceptance: ${(round.second_exchange.African_Islamic_utility.acceptance * 100).toFixed(1)}%,
+                            Novelty: ${(round.second_exchange.African_Islamic_utility.novelty * 100).toFixed(1)}%,
+                            <strong>Total: ${(round.second_exchange.African_Islamic_utility.total * 100).toFixed(1)}%</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="two-col" style="margin-bottom:1rem;">
+                <div class="col">
+                    <div class="card" style="background:#f8f9fa;">
+                        <strong style="color:#4285F4;">English-Speaking Guidelines Weights</strong>
+                        ${Object.entries(round.guidelines_weight.English_Speaking_distribution).map(([k, v]) => `
+                            <div style="display:flex;justify-content:space-between;">
+                                <span>${k}</span>
+                                <span>${(v * 100).toFixed(0)}%</span>
+                            </div>
+                            <div style="background:#dae8fc;height:6px;border-radius:3px;margin-bottom:6px;">
+                                <div style="background:#4285F4;height:6px;border-radius:3px;width:${v * 100}%"></div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card" style="background:#f8f9fa;">
+                        <strong style="color:#FBBC05;">African-Islamic Guidelines Weights</strong>
+                        ${Object.entries(round.guidelines_weight.African_Islamic_distribution).map(([k, v]) => `
+                            <div style="display:flex;justify-content:space-between;">
+                                <span>${k}</span>
+                                <span>${(v * 100).toFixed(0)}%</span>
+                            </div>
+                            <div style="background:#fff9c4;height:6px;border-radius:3px;margin-bottom:6px;">
+                                <div style="background:#FBBC05;height:6px;border-radius:3px;width:${v * 100}%"></div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+                debateRounds.appendChild(roundCard);
+                if (roundIndex < debateData.history.length - 1) {
+                    const nextBtn = document.createElement('button');
+                    nextBtn.className = 'button';
+                    nextBtn.style.background = '#4285F4';
+                    nextBtn.style.color = '#fff';
+                    nextBtn.textContent = 'Next Round';
+                    nextBtn.onclick = function () {
+                        nextBtn.disabled = true;
+                        renderRound(roundIndex + 1);
+                        nextBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    };
+                    roundCard.appendChild(nextBtn);
+                } else {
+                    setTimeout(() => {
+                        consensusDiv.style.display = '';
+                        consensusDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 600);
+                }
+            }
+
+            if (startBtn) {
+                startBtn.onclick = function () {
+                    startBtn.disabled = true;
+                    debateRounds.innerHTML = '';
+                    consensusDiv.style.display = 'none';
+                    renderRound(0);
+                    debateRounds.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                };
+            }
+        })();
+    </script>
+</body>
+
+</html>
